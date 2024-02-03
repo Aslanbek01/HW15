@@ -1,16 +1,18 @@
-from docx import Document
+import requests
+import os
+import json
 
-def create_word_document(text):
-    doc = Document()
-    doc.add_paragraph(text)
+url = "https://jsonplaceholder.typicode.com/posts"
 
-    filename = "output.docx"
-    doc.save(filename)
-    print(f"Файл '{filename}' успешно создан.")
+response = requests.get(url)
 
-def main():
-    user_input = input("Aslanbek Smagulov HW ")
-    create_word_document(user_input)
+if response.status_code == 200:
+    data = response.json()
 
-if __name__ == "__main__":
-    main()
+    os.makedirs('json_files', exist_ok=True)
+
+    for i, item in enumerate(data, start=1):
+        with open(f'json_files/post_{i}.json', 'w', encoding='utf-8') as file:
+            json.dump(item, file, ensure_ascii=False, indent=4)
+else:
+    print(f"Ошибка при запросе: Статус код {response.status_code}")
