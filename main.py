@@ -1,18 +1,33 @@
-import requests
+import aiohttp
+import asyncio
+import aiofiles
 import os
-import json
 
-url = "https://jsonplaceholder.typicode.com/posts"
+folders = [f'folder_{i}' for i in range(10)]
 
-response = requests.get(url)
+async def create_folder(folder):
+    os.makedirs(folder, exist_ok=True)
 
-if response.status_code == 200:
-    data = response.json()
+async def download_image(session, url, folder):
+    async with session.get(url) as response:
+        if response.status == 200:
+            async with aiofiles.open(os.path.join(folder, 'image.png'), mode='wb') as f:
+                await f.write(await response.read())
 
-    os.makedirs('json_files', exist_ok=True)
+async def main():
 
-    for i, item in enumerate(data, start=1):
-        with open(f'json_files/post_{i}.json', 'w', encoding='utf-8') as file:
-            json.dump(item, file, ensure_ascii=False, indent=4)
-else:
-    print(f"Ошибка при запросе: Статус код {response.status_code}")
+    await asyncio.gather(*(create_folder(folder) for folder in folders))
+
+    image_urls = [
+
+        'http://example.com/image1.jpg',
+        'http://example.com/image2.jpg',
+
+        'http://example.com/image10.jpg'
+    ]
+
+    async with aiohttp.ClientSession() as session:
+        tasks = [download_image(session, image_urls[i], folders[i]) for i in range(len(image_urls))]
+        await asyncio.gather(*tasks)
+
+asyncio.run(main())
